@@ -1,6 +1,6 @@
 {
   "name": "@cubicecho/mcp-discovery",
-  "version": "0.0.0",
+  "version": "0.2.0",
   "description": "Advertise and discover MCP servers: Server Cards, AI Catalogs, serving them over HTTP, and finding them from a client.",
   "keywords": [
     "mcp",
