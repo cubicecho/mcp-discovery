@@ -1,0 +1,29 @@
+{
+  // The checking config: everything in the repo that is TypeScript, and no emit. The published
+  // build is `tsconfig.build.json`, which is the only place `dist/` is described.
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+
+    "strict": true,
+    "noEmit": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    // Source carries `.ts` specifiers so the same files run unbuilt under `tsx` and Node's
+    // type stripping; the build rewrites them to `.js`.
+    "allowImportingTsExtensions": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+
+    "types": ["node"]
+  },
+  "include": ["src", "tests", "vitest.config.ts"]
+}

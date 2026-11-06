@@ -1,0 +1,131 @@
+# @cubicecho/mcp-discovery
+
+> Advertise and discover MCP servers: Server Cards, AI Catalogs, serving them over HTTP, and finding them from a client.
+
+A server describes itself with an MCP Server Card (SEP-2127) and a host lists its cards in an AI Catalog at `/.well-known/ai-catalog.json`. This package builds and validates both, serves them with the CORS and caching headers the spec asks for, and on the client side fetches a host's catalog and every card in it, bounded in time and size. LAN advertising and browsing over mDNS is the separate `@cubicecho/mcp-discovery/mdns` export.
+
+Requires Node >=22, with `zod` >=4.1 as a peer dependency. ESM only.
+Full prose, worked examples and the reasoning behind each seam are in README.md; this file is the index.
+
+## Exports
+
+### server-card
+
+The MCP Server Card: a static, public description of one remote MCP server, read before connecting.
+
+- `CardConnection` (type) — How to connect to a server from its card: the URL, and which headers the caller must supply.
+- `cardConnection` — The first streamable-HTTP remote on a card that can be used as it stands.
+- `createServerCard` — Builds a Server Card, adding its `$schema` and validating the result.
+- `Icon` (type) — An icon a client may show for the server.
+- `Input` (type) — A user-supplied or pre-set value for a remote's URL variable or header.
+- `iconSchema` — An icon a client may show for the server.
+- `inputSchema` — A user-supplied or pre-set value for a remote's URL variable or header.
+- `KeyValueInput` (type) — A named input: an HTTP header a client sends to the remote.
+- `keyValueInputSchema` — A named input: an HTTP header a client sends to the remote.
+- `parseServerCard` — Validates a document as a Server Card.
+- `Remote` (type) — One HTTP endpoint the server can be reached at.
+- `Repository` (type) — Where the server's source code lives.
+- `remoteSchema` — One HTTP endpoint the server can be reached at.
+- `repositorySchema` — Where the server's source code lives.
+- `SERVER_CARD_PATH` — What is appended to a streamable-HTTP URL to reach its card, the location MCP reserves.
+- `SERVER_CARD_SCHEMA_URL` — The `$schema` every v1 Server Card carries.
+- `ServerCard` (type) — An MCP Server Card.
+- `ServerCardFields` (type) — What `createServerCard` takes: a card without its `$schema`.
+- `serverCardSchema` — An MCP Server Card.
+- `serverCardUrl` — The URL a server's card is served at by default: its streamable-HTTP URL plus `/server-card`.
+- `TRANSPORT_SSE` — The legacy HTTP+SSE transport.
+- `TRANSPORT_STREAMABLE_HTTP` — The streamable-HTTP transport.
+
+### ai-catalog
+
+The AI Catalog: a host's list of AI artifacts, each named by media type, which is how a client finds its Server Cards.
+
+- `AI_CATALOG_SPEC_VERSION` — The `specVersion` this package writes.
+- `AiCatalog` (type) — An AI Catalog.
+- `AiCatalogFields` (type) — What `createAiCatalog` takes.
+- `aiCatalogLinkHeader` — A `Link` header value that points at an AI Catalog, for a site's other responses to carry.
+- `aiCatalogSchema` — An AI Catalog.
+- `airIdentifier` — A `urn:air:{publisher}:mcp:{name}` identifier for an MCP server.
+- `CatalogEntry` (type) — One artifact in a catalog.
+- `catalogEntrySchema` — One artifact in a catalog, carried by `url` or inline as `data`, never both.
+- `createAiCatalog` — Builds an AI Catalog, adding its `specVersion` and validating the result.
+- `HostInfo` (type) — The operator of a catalog.
+- `hostInfoSchema` — The operator of a catalog.
+- `inlineServerCardEntry` — An entry that carries a Server Card inline.
+- `parseAiCatalog` — Validates a document as an AI Catalog.
+- `parseInlineServerCard` — Validates a card entry's inline card.
+- `ServerCardEntry` (type) — A catalog entry that holds a Server Card, by URL or inline.
+- `serverCardEntries` — The entries in a catalog that hold Server Cards; every other artifact type is left out.
+- `serverCardEntry` — An entry that points at a Server Card by URL.
+
+### discover
+
+Domain-level discovery: read a host's AI Catalog, then every Server Card it lists.
+
+- `DiscoveredServer` (type) — A server found in a catalog, with the card that describes it.
+- `Discovery` (type) — What `discover` found on a host.
+- `DiscoveryFailure` (type) — A catalog entry whose card could not be read.
+- `discover` — Discovers the MCP servers a host advertises, from its `/.well-known/ai-catalog.json`.
+- `discoverCatalog` — Discovers the MCP servers an AI Catalog lists, wherever the catalog is served (e.g.
+
+### fetch-document
+
+Fetching a discovery document from a host nobody has vetted: bounded in time and size, and validated.
+
+- `FetchOptions` (type) — What every fetch in this package accepts besides its settings.
+- `fetchAiCatalog` — Fetches and validates an AI Catalog.
+- `fetchServerCard` — Fetches and validates a Server Card.
+
+### consts
+
+- `AI_CATALOG_MEDIA_TYPE` — Media type of an AI Catalog.
+- `AI_CATALOG_WELL_KNOWN_PATH` — Where a host serves its AI Catalog for domain-level discovery (RFC 8615).
+- `SERVER_CARD_MEDIA_TYPE` — Media type of an MCP Server Card.
+
+### defaults
+
+- `FETCH_DEFAULTS` — The fetching defaults.
+- `FetchSettings` (type) — How discovery documents are fetched.
+- `SERVE_DEFAULTS` — The serving defaults; the max age is the one the Server Card spec recommends.
+- `ServeSettings` (type) — How discovery documents are served.
+
+### errors
+
+- `DiscoveryError` — Any failure to read a discovery document; `discover()` reports these per entry.
+- `DocumentFetchError` — A document could not be fetched: network failure, timeout, an error status or an oversized body.
+- `InvalidDocumentError` — A document arrived but is not valid JSON, or does not match its schema.
+
+### discovery-middleware
+
+Everything a server needs to be discoverable over HTTP: its AI Catalog and a Server Card per MCP endpoint.
+
+- `AdvertisedEndpoint` (type) — One MCP endpoint a server advertises.
+- `CardContext` (type) — What a card builder is told about the request it answers.
+- `DiscoveryMiddleware` (type) — Express-style middleware: it answers discovery requests and passes every other request to `next`.
+- `discoveryMiddleware` — Middleware that serves `/.well-known/ai-catalog.json` and each endpoint's `<path>/server-card`.
+- `EndpointSource` (type) — Lists the endpoints to advertise, asked per request so it can follow config changes.
+
+### document-response
+
+The HTTP response for a discovery document, worked out without any server framework.
+
+- `DocumentRequest` (type) — The parts of a request that decide the response.
+- `DocumentResponse` (type) — A response ready to write to any server.
+- `documentResponse` — Works out the response to a request for a discovery document.
+
+### node-handler
+
+Request handlers for Node's `http` server, which Express 5 and most other Node frameworks also accept.
+
+- `aiCatalogHandler` — A handler that serves an AI Catalog, for `/.well-known/ai-catalog.json`.
+- `DocumentHandler` (type) — A Node request handler; it rejects when the document source throws.
+- `DocumentSource` (type) — Where a handler gets the document it serves, asked once per request so it can follow config changes.
+- `documentHandler` — A handler that serves one kind of discovery document.
+- `serverCardHandler` — A handler that serves a Server Card, for `<streamable-http-url>/server-card`.
+- `writeDocument` — Writes a discovery document as the response to a request.
+
+### request-origin
+
+Working out the origin a request reached this server at, so a document can name URLs the client can use.
+
+- `requestOrigin` — The `scheme://host[:port]` a request was addressed to, from its `Host` header.

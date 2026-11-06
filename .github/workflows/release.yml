@@ -1,0 +1,103 @@
+# Publishes the package to npm. There is no NPM_TOKEN and no npm secret of any
+# kind: the runner trades its GitHub OIDC token for a short-lived registry
+# credential, which is what `id-token: write` below exists for. npm only makes
+# that trade for a workflow the package has been told to trust:
+#
+#   npm trust github @cubicecho/mcp-discovery --allow-publish \
+#     --repository cubicecho/mcp-discovery --workflow release.yml
+#
+# so renaming this file, or moving the publish into another workflow, revokes
+# its own access until that is run again.
+#
+# The one thing OIDC cannot do is the very first publish — npm has nowhere to
+# hang the trust configuration until the package exists, and `npm trust` says as
+# much ("the package you're configuring must already exist"). 0.1.0 therefore has
+# to go out from a logged-in `npm publish` once; every release after it is this.
+#
+# Versions come from the commit log, so a release only happens when commits say
+# what changed — `feat:` for a minor, `fix:` for a patch, `BREAKING CHANGE:` in
+# a body for a major. Anything else releases nothing, which is why the manual
+# trigger below exists: it publishes the current main under a version you name,
+# without waiting for the history to become conventional.
+name: Release
+
+on:
+  # Never in parallel with the tests: CI has to have passed on this commit.
+  workflow_run:
+    workflows: [CI]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish as, e.g. 0.1.0 (no tag or release notes are created)'
+        required: true
+
+# The repo's default workflow token is read-only. semantic-release pushes the
+# CHANGELOG/version commit, cuts the GitHub release, and comments on issues, so
+# each of those has to be granted here. id-token is the npm half: without it
+# there is no OIDC token to trade and nothing can be published at all.
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  release:
+    # A red CI run must not become a published version.
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The commit CI actually tested, not whatever main has drifted to.
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+          # semantic-release reads the whole log to work out the next version.
+          fetch-depth: 0
+          # It authenticates with GITHUB_TOKEN itself; the checkout credentials
+          # would only shadow that.
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          # Trusted publishing needs npm >= 11.5.1, which is well inside what 26
+          # ships. The npm in an older major would fail the exchange, not fall
+          # back to something that works.
+          node-version: '26'
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      # Builds nothing. dist/ is built by `prepack`, which npm runs as part of
+      # the publish below.
+      - run: npm ci
+
+      - name: Semantic release
+        if: github.event_name == 'workflow_run'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # No NPM_TOKEN on purpose. @semantic-release/npm does the OIDC exchange
+          # itself and returns before it would look for a token; one in the
+          # environment would only become the thing that gets used when the
+          # exchange quietly fails, turning a broken trust config into a
+          # successful publish that nobody notices.
+          #
+          # Public repo, so the published version carries a provenance
+          # attestation naming the commit and workflow that built it.
+          NPM_CONFIG_PROVENANCE: 'true'
+        run: npx semantic-release
+
+      # The escape hatch: no tag, no release notes, no CHANGELOG — just the
+      # tarball on npm under the version you asked for. It authenticates exactly
+      # the same way, so it is not a way around the first-publish problem above.
+      # The `npm pkg set` below is deliberately not committed: this job publishes a
+      # tarball and leaves the branch alone, so semantic-release keeps taking its
+      # baseline from the tags rather than from a version it did not write.
+      - name: Publish ${{ inputs.version }}
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          VERSION: ${{ inputs.version }}
+          NPM_CONFIG_PROVENANCE: 'true'
+        run: |
+          npm pkg set version="$VERSION"
+          npm publish

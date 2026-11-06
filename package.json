@@ -1,0 +1,79 @@
+{
+  "name": "@cubicecho/mcp-discovery",
+  "version": "0.0.0",
+  "description": "Advertise and discover MCP servers: Server Cards, AI Catalogs, serving them over HTTP, and finding them from a client.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "discovery",
+    "server-card",
+    "ai-catalog",
+    "well-known",
+    "mdns",
+    "typescript"
+  ],
+  "license": "MIT",
+  "author": "Benjamin Van Treese <vantreeseba@gmail.com>",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cubicecho/mcp-discovery.git"
+  },
+  "homepage": "https://github.com/cubicecho/mcp-discovery#readme",
+  "bugs": {
+    "url": "https://github.com/cubicecho/mcp-discovery/issues"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./mdns": {
+      "types": "./dist/mdns.d.ts",
+      "import": "./dist/mdns.js"
+    }
+  },
+  "files": [
+    "dist",
+    "llms.txt"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node scripts/llms-txt.mjs",
+    "prepack": "npm run build",
+    "check": "npm run check:biome && npm run check:types",
+    "check:biome": "biome check --write .",
+    "check:types": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "llms": "node scripts/llms-txt.mjs",
+    "llms:check": "node scripts/llms-txt.mjs --check",
+    "coverage": "vitest run --coverage"
+  },
+  "peerDependencies": {
+    "zod": ">=4.1",
+    "bonjour-service": ">=1.4"
+  },
+  "peerDependenciesMeta": {
+    "bonjour-service": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.12",
+    "@semantic-release/changelog": "^7.0.0",
+    "@semantic-release/git": "^11.0.1",
+    "@types/node": "^26.6.6",
+    "@vitest/coverage-v8": "^4.1.12",
+    "bonjour-service": "^1.4.4",
+    "semantic-release": "^25.0.9",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.12",
+    "zod": "^4.6.7"
+  }
+}
