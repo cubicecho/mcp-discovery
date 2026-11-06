@@ -9,6 +9,12 @@ Full prose, worked examples and the reasoning behind each seam are in README.md;
 
 ## Exports
 
+### host-slug
+
+Turning a machine's hostname into the part of a Server Card's name, or a `urn:air` publisher, that tells two hosts apart.
+
+- `hostSlug` — A hostname's first label as a slug: lowercase letters, digits and dashes, as a card name's namespace allows.
+
 ### server-card
 
 The MCP Server Card: a static, public description of one remote MCP server, read before connecting.

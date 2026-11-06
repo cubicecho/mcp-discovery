@@ -22,7 +22,8 @@ npm install @cubicecho/mcp-discovery zod
 A server that wants to be found serves its catalog and cards, then announces itself:
 
 ```ts
-import { airIdentifier, createServerCard, discoveryMiddleware } from '@cubicecho/mcp-discovery';
+import { hostname } from 'node:os';
+import { airIdentifier, createServerCard, discoveryMiddleware, hostSlug } from '@cubicecho/mcp-discovery';
 import { advertise } from '@cubicecho/mcp-discovery/mdns';
 
 app.use(
@@ -32,7 +33,7 @@ app.use(
       identifier: airIdentifier('skills.local', 'skills'),
       card: ({ endpointUrl }) =>
         createServerCard({
-          name: 'io.github.cubicecho.mcp-skills.nas/skills',
+          name: `io.github.cubicecho.mcp-skills.${hostSlug(hostname())}/skills`,
           version: '4.0.0',
           description: 'Skills for agents.',
           remotes: [
@@ -51,6 +52,9 @@ app.listen(3000, '0.0.0.0', async () => {
   process.on('SIGTERM', () => advertisement.stop());
 });
 ```
+
+`hostSlug(os.hostname())` gives the `nas` in names like these, so two machines running the same server keep
+their cards apart.
 
 Mount the middleware before any auth guard, since the documents are public. Listen on the LAN,
 not only on localhost, and advertise after `listen`.
