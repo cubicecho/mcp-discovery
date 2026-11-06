@@ -8,6 +8,7 @@
  * `@cubicecho/mcp-discovery/mdns` export.
  */
 
+export { hostSlug } from './card/host-slug.ts';
 export {
   type CardConnection,
   cardConnection,
