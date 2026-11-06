@@ -38,7 +38,7 @@ that emits.
 | `catalog` | a host's AI Catalog of cards | `ai-catalog` |
 | `serve` | answering HTTP requests for a document | `document-response` `node-handler` `discovery-middleware` `request-origin` |
 | `client` | fetching documents and discovering a host | `fetch-document` `discover` |
-| `mdns` | advertising and finding hosts and servers on a LAN | `txt-record` `advertise` `browse` `server-tracker` `watch-servers` `load-bonjour` `report-error` |
+| `mdns` | advertising and finding hosts and servers on a LAN | `txt-record` `advertise` `advertiser` `browse` `server-tracker` `watch-servers` `load-bonjour` `report-error` |
 
 There are two entry points, and they are the only files that re-export: `src/index.ts` (`.`)
 and `src/mdns.ts` (`./mdns`). Nothing reachable from `src/index.ts` may import `mdns/`,

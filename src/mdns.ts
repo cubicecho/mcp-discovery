@@ -7,6 +7,7 @@
 
 export { MDNS_DEFAULTS, type MdnsSettings } from './core/defaults.ts';
 export { AdvertiseError, type Advertisement, type AdvertiseOptions, advertise } from './mdns/advertise.ts';
+export { type Advertiser, type AdvertiserDeps, createAdvertiser } from './mdns/advertiser.ts';
 export {
   type FoundService,
   findHosts,

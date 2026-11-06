@@ -150,6 +150,9 @@ for (const host of await findHosts()) {
 }
 ```
 
+`createAdvertiser({ isWanted, options, log })` keeps an announcement in step with a setting that can change
+while the process runs: call `sync()` after each change and `close()` on shutdown.
+
 `watchHosts({ onUp, onDown })` keeps browsing and reports hosts as they come and go.
 `watchServers` goes one step further: it reads each host's catalog and reports servers.
 
