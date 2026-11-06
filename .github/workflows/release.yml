@@ -4,7 +4,7 @@
 # that trade for a workflow the package has been told to trust:
 #
 #   npm trust github @cubicecho/mcp-discovery --allow-publish \
-#     --repository cubicecho/mcp-discovery --workflow release.yml
+#     --repository cubicecho/mcp-discovery --file release.yml
 #
 # so renaming this file, or moving the publish into another workflow, revokes
 # its own access until that is run again.
